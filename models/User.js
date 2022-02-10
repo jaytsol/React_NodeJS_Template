@@ -1,3 +1,4 @@
+// MongoDB에 들어갈 데이터 틀
 const mongoose = require('mongoose');
 const bcrpyt = require('bcrypt');
 const saltRounds = 10;
@@ -28,6 +29,7 @@ const userSchema = mongoose.Schema({
   },
 });
 
+//becrypt를 통한 비밀번호 암호화
 userSchema.pre('save', function (next) {
   var user = this;
   if (user.isModified('password')) {
@@ -40,8 +42,17 @@ userSchema.pre('save', function (next) {
         next();
       });
     });
+  } else {
+      next();
   }
 });
+
+userSchema.methods.comparePassword = function(plainPassword, cb) {
+  bcrpyt.compare(plainPassword, this.password, function(err, isMatch) {
+    if(err) return cb(err),
+    cb(null, isMatch)
+  })
+}
 
 const User = mongoose.model('User', userSchema);
 
