@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const { swaggerUi, specs } = require('./modules/swagger');
 require('dotenv').config();
 PORT = process.env.PORT;
 
@@ -8,6 +9,7 @@ const { User } = require('./models/User');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 const mongoose = require('mongoose');
 mongoose
@@ -20,7 +22,7 @@ mongoose
 app.get('/', (req, res) => res.send('Hello World!!!'));
 app.post('/register', (req, res) => {
   const user = new User(req.body);
-  
+
   user.save((err, userInfo) => {
     if (err) return res.json({ success: false, err });
     return res.status(200).json({
@@ -31,24 +33,22 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
   // 데이터베이스에서 요청된 이메일이 있는지 확인
   User.findOne({ email: req.body.email }, (err, user) => {
-    if(!user) {
+    if (!user) {
       return res.json({
         loginSuccess: false,
-        message: "제공된 이메일에 해당하는 유저가 없습니다."
-      })
+        message: '제공된 이메일에 해당하는 유저가 없습니다.',
+      });
     }
 
     // 요청된 이메일이 데이터베이스에 있다면 비밀번호가 맞는 비밀번호인지 확인.
     user.comparePassword(req.body.password, (err, isMatch) => {
       if (!isMatch)
-        return res.json({ loginSuccess: false, message: "wrong password"})
+        return res.json({ loginSuccess: false, message: 'wrong password' });
 
-        //비밀번호가 맞다면
-        user.generateToken((err, user) => {
-          
-        })
-    })
-  })
-})
+      //비밀번호가 맞다면
+      user.generateToken((err, user) => {});
+    });
+  });
+});
 
 app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`));
